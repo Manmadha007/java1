@@ -1,46 +1,44 @@
 pipeline {
-    agent {
-        docker {
-            image 'maven:3.9.0'
-            args '-v /root/.m2:/root/.m2' // Maps the Maven repository directory for caching dependencies
-        }
+    agent any
+    tools {
+        maven 'Maven' // Ensure Maven is configured in Jenkins
+        jdk 'JDK'     // Ensure JDK is configured in Jenkins
     }
     stages {
         stage('Build') {
             steps {
                 echo 'Building the project...'
-                sh 'mvn -B -DskipTests clean package' // Batch mode with skipped tests for packaging
+                sh 'mvn -B -DskipTests clean package'
             }
         }
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                sh 'mvn test' // Executes the unit tests
+                sh 'mvn test'
             }
             post {
                 always {
-                    echo 'Archiving test results...'
-                    junit 'target/surefire-reports/*.xml' // Collects test results for reporting
+                    echo 'Publishing test results...'
+                    junit 'target/surefire-reports/*.xml'
                 }
             }
         }
         stage('Deliver') {
             steps {
                 echo 'Delivering the application...'
-                sh './jenkins/scripts/deliver.sh' // Custom delivery script
+                sh './jenkins/scripts/deliver.sh'
             }
         }
     }
     post {
         always {
-            echo 'Cleaning up the workspace...'
-            cleanWs() // Cleans up the workspace after execution
+            cleanWs()
         }
         success {
             echo 'Pipeline completed successfully!'
         }
         failure {
-            echo 'Pipeline failed. Please check the logs.'
+            echo 'Pipeline failed. Check the logs.'
         }
     }
 }
